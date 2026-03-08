@@ -1,2 +1,190 @@
 # BIRAFFE3_eyetracking_analysis
 Python notebook for analyzing Tobii eye-tracking data and generating gaze heatmaps over visual stimuli (e.g., faces). The pipeline synchronizes gaze data with XDF/LSL experiment markers, extracts stimulus presentation windows, and visualizes fixation patterns directly on stimulus images.
+
+# Eye-Tracking Heatmap Analysis
+
+Python pipeline for analyzing **Tobii eye-tracking data** and generating **heatmaps of gaze fixations on visual stimuli (e.g. faces)**.
+
+The script synchronizes Tobii gaze data with experimental markers from **LSL/XDF streams**, extracts stimulus presentation windows, and produces heatmaps overlaid on the original stimuli.
+
+---
+
+# Features
+
+* Import Tobii gaze data (`.csv`)
+* Load experiment markers from **XDF / Lab Streaming Layer**
+* Synchronize timestamps between streams
+* Parse gaze coordinates from both eyes
+* Filter invalid gaze samples
+* Detect gaze points outside the screen
+* Extract stimulus presentation windows
+* Generate:
+
+  * heatmaps for each stimulus
+  * heatmap for the whole session
+* Overlay gaze heatmaps directly on stimulus images
+
+---
+
+# Example Output
+
+For each stimulus the pipeline produces:
+
+* fixation heatmap
+* gaze points overlay
+* saved `.png` images
+
+Example structure:
+
+```
+results/
+  heatmap_SUB2812_168_m_f_s_b.png
+  heatmap_SUB2812_004_o_m_h_a.png
+  heatmap_all_SUB2812.png
+```
+
+---
+
+# Project Structure
+
+```
+project/
+│
+├── eyetracking_heatmap_analysis.ipynb
+│
+├── data/
+│   └── 2812/
+│       ├── SUB2812.csv
+│       ├── SUB2812.xdf
+│       └── SUB2812-Procedure_info.csv
+│
+├── stimuli/
+│   ├── 168_m_f_s_b.jpg
+│   ├── 004_o_m_h_a.jpg
+│   └── ...
+│
+└── results/
+    └── generated heatmaps
+```
+
+---
+
+# Installation
+
+Install required Python libraries:
+
+```bash
+pip install pandas numpy matplotlib seaborn pyxdf scipy pillow
+```
+
+Required packages:
+
+* pandas
+* numpy
+* matplotlib
+* seaborn
+* pyxdf
+* scipy
+* pillow
+
+---
+
+# Input Data
+
+The pipeline expects three files per participant:
+
+### 1. Tobii gaze data
+
+```
+SUBXXXX.csv
+```
+
+Contains:
+
+* gaze coordinates
+* timestamps
+* gaze validity
+
+---
+
+### 2. Experiment markers
+
+```
+SUBXXXX.xdf
+```
+
+Contains LSL streams such as:
+
+* Events
+* Procedure
+
+The **Procedure stream** includes JSON markers describing stimulus presentation.
+
+Example marker:
+
+```json
+{
+  "STIM-TYPE": "285_f_m_a_w",
+  "STIM-SET": "faces",
+  "STIM-COND": "conditionA"
+}
+```
+
+---
+
+### 3. Participant metadata
+
+```
+SUBXXXX-Procedure_info.csv
+```
+
+Contains:
+
+* ID
+* age
+* sex
+* timestamp
+
+---
+
+# How It Works
+
+Pipeline steps:
+
+1. Load Tobii gaze data
+2. Parse gaze coordinates
+3. Filter invalid samples
+4. Load XDF experiment streams
+5. Extract stimulus markers from the **Procedure** stream
+6. Synchronize Tobii timestamps with experiment markers
+7. Split gaze data into stimulus windows
+8. Generate fixation heatmaps
+9. Overlay heatmaps on stimulus images
+
+---
+
+# Heatmap Generation
+
+Heatmaps are created using:
+
+* `numpy.histogram2d`
+* `scipy.ndimage.gaussian_filter`
+
+The gaze coordinates are normalized (0–1) and then scaled to the pixel size of the stimulus image.
+
+---
+
+# Example Use Case
+
+Typical applications include:
+
+* face perception research
+* emotion recognition studies
+* gaze behavior analysis
+* visual attention experiments
+
+---
+
+# Author
+
+Created for experimental eye-tracking data analysis using **Tobii eye trackers** and **LSL/XDF pipelines**.
