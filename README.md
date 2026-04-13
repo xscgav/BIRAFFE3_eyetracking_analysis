@@ -1,5 +1,9 @@
 # BIRAFFE3_eyetracking_analysis
-Python notebook for analyzing Tobii eye-tracking data and generating gaze heatmaps over visual stimuli (e.g., faces). The pipeline synchronizes gaze data with XDF/LSL experiment markers, extracts stimulus presentation windows, and visualizes fixation patterns directly on stimulus images.
+
+Python notebook for advanced analysis of Tobii eye-tracking data, including
+**time synchronization with XDF/LSL markers, fixation-based drift estimation,
+trial-wise drift correction**, and generation of **corrected gaze heatmaps**
+over visual stimuli (e.g., faces).
 
 # Eye-Tracking Heatmap Analysis
 
@@ -149,17 +153,24 @@ Contains:
 
 # How It Works
 
+
 Pipeline steps:
 
 1. Load Tobii gaze data
-2. Parse gaze coordinates
-3. Filter invalid samples
-4. Load XDF experiment streams
-5. Extract stimulus markers from the **Procedure** stream
+2. Parse and average gaze coordinates (left/right eye)
+3. Filter invalid gaze samples
+4. Load XDF experiment streams (LSL)
+5. Extract stimulus markers from the *Procedure* stream
 6. Synchronize Tobii timestamps with experiment markers
-7. Split gaze data into stimulus windows
-8. Generate fixation heatmaps
-9. Overlay heatmaps on stimulus images
+7. Extract fixation periods from each trial
+8. Estimate gaze drift relative to the screen center
+9. Identify and exclude drift outliers
+10. Apply trial-wise drift correction
+11. Perform quality control using fixation heatmaps
+12. Extract gaze data for each stimulus
+13. Generate corrected gaze heatmaps:
+    - per stimulus
+    - for the whole session
 
 ---
 
@@ -170,7 +181,54 @@ Heatmaps are created using:
 * `numpy.histogram2d`
 * `scipy.ndimage.gaussian_filter`
 
-The gaze coordinates are normalized (0–1) and then scaled to the pixel size of the stimulus image.
+The gaze coordinates are normalized (0–1) and then scaled to the pixel size of the stimulus image. 
+All stimulus heatmaps are generated **after drift correction** to ensure
+spatial consistency and comparability across trials.
+
+
+
+---
+
+# Drift Estimation and Correction
+
+The pipeline includes a **fixation-based drift estimation and correction procedure**
+to compensate for systematic gaze offsets over time.
+
+## Fixation-based Drift Estimation
+
+For each trial, gaze samples from the **first 3 seconds of stimulus presentation**
+(when a fixation cross was displayed) are extracted.
+
+For each fixation period:
+
+1. A gaze heatmap is computed.
+2. The maximum of the heatmap is identified.
+3. A drift vector is defined as the offset between the heatmap maximum and
+   the screen center **(0.5, 0.5)** in normalized coordinates.
+
+## Outlier Detection
+
+Trials with excessively large drift vectors (e.g. top 5% of drift magnitude)
+are automatically identified as outliers and excluded from correction,
+under the assumption that the participant did not fixate on the cross.
+
+## Drift Correction
+
+For all remaining trials, a **trial-specific drift vector** is applied to
+all gaze samples belonging to that trial.
+
+Gaze coordinates are corrected and clipped to the valid screen range (0–1)
+before further analysis.
+
+## Quality Control
+
+To verify correction effectiveness, fixation heatmaps are generated:
+
+- **before drift correction**
+- **after drift correction**
+
+showing the alignment of gaze around the fixation cross.
+
 
 ---
 
